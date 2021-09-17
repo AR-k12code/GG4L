@@ -29,5 +29,8 @@ Select "School Mapping" tab.  If you've already synced before using the Basic Ro
 Go to the connect.gg4l.com and select the "Import OneRoster v1.1 SFTP" then click on "Run Import"
 
 ## To do
+- [ ] Students and Teachers do not have State IDs
+- [ ] The relationship to parents are not labeled correctly.
+- [ ] Currently only including Guardians 1 and 2. Would like to add 3rd.
 - [ ] It would be nice if the One Roster files matched the Clever files for sections ids.
 - [ ] Userids are reporting an error even though they are accepted.
