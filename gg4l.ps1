@@ -1,4 +1,10 @@
 #Requires -Version 7.1
+
+Param(
+    [parameter(Mandatory=$false,HelpMessage="Do not download new Cognos Reports")][switch]$SkipDownload,
+	[parameter(Mandatory=$false,HelpMessage="Download from Cognos but do not upload the files to GG4L.")][switch]$SkipUpload
+)
+
 <#
 GG4L Automation Script
 Craig Millsap
@@ -15,7 +21,7 @@ Gentry Public Schools
 Please see https://github.com/AR-k12code/GG4L for more information.
 #>
 
-#get host key by pscp.exe -v .\ fakeuser@upload.gg4l.com
+#get host key by running .\bin\pscp.exe -v .\ fakeuser@upload.gg4l.com:\
 $gg4lhostkey = "02:4c:6d:15:57:59:d0:d6:4b:26:ee:90:b9:0f:74:94"
 
 Start-Transcript "$PSScriptRoot\gg4l-log.log" -Force
@@ -30,6 +36,8 @@ if (-Not(Test-Path $PSScriptRoot\settings.ps1)) {
 
 #Required folders
 if (-Not(Test-Path "$PSScriptRoot\files")) { New-Item -Path $PSScriptRoot\files -ItemType directory }
+
+if (-Not($SkipDownload)) { #Skip downloading of new reports.
 
 $reports = @('users','orgs','academicSessions','courses','classes','enrollments','demographics') #,'manifest')
 
@@ -63,13 +71,19 @@ if (($failedJobs | Measure-Object).count -ge 1) {
     exit(2)
 }
 
-try {
-    Write-Host "Info: Uploading files to GG4L..." -ForegroundColor YELLOW
-    $exec = Start-Process -FilePath "$PSScriptRoot\bin\pscp.exe" -ArgumentList "-r -pw ""$gg4lpassword"" -hostkey $gg4lhostkey -batch $PSScriptRoot\files\ $($gg4lusername)@upload.gg4l.com:" -PassThru -Wait -NoNewWindow
-    IF ($exec.ExitCode -ge 1) { Throw }
-} catch {
-    write-Host "ERROR: Failed to properly upload files to GG4L." -ForegroundColor RED
-    exit(3)
+} #close skip download.
+
+if (-Not($SkipUpload)) {
+    try {
+        Write-Host "Info: Uploading files to GG4L..." -ForegroundColor YELLOW
+        $exec = Start-Process -FilePath "$PSScriptRoot\bin\pscp.exe" -ArgumentList "-pw ""$gg4lpassword"" -hostkey $gg4lhostkey -r $PSScriptRoot\files\*.csv $($gg4lusername)@upload.gg4l.com:/" -PassThru -Wait -NoNewWindow
+        if ($exec.ExitCode -ge 1) { Throw }
+    } catch {
+        write-Host "ERROR: Failed to properly upload files to GG4L." -ForegroundColor RED
+        Stop-Transcript
+        exit(3)
+    }
 }
 
+Stop-Transcript
 exit
