@@ -52,7 +52,7 @@ $results = $reports | ForEach-Object -Parallel {
     $incomingsession = $using:session
     
     #Run Cognos Download using incoming options.
-    & $using:PSScriptRoot\..\CognosDownload.ps1 -report "$PSItem" -cognosfolder "_Shared Data File Reports\GG4L" -SessionEstablished -savepath "$using:PSScriptRoot\files" -FileName "$($PSItem).csv" -ShowReportDetails -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknoledge the prompts even if we don't answer them directly.
+    & $using:PSScriptRoot\..\CognosDownload.ps1 -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -SessionEstablished -savepath "$using:PSScriptRoot\files" -FileName "$($PSItem).csv" -ShowReportDetails -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknoledge the prompts even if we don't answer them directly.
 
     if ($LASTEXITCODE -ne 0) { throw }
     
