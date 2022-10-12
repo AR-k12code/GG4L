@@ -1,11 +1,11 @@
 # GG4L
 
-## Disclaimer.
+## Disclaimer
 These scripts come without warranty of any kind. Use them at your own risk. I assume no liability for the accuracy, correctness, completeness, or usefulness of any information provided by this site nor for any sort of damages using these scripts may cause.
 
 ## Requirements
-You must have the Cognos Downloader installed and configured per the suggested install process here:
-https://github.com/AR-k12code/CognosDownloader using the CognosDefaults.ps1 file.
+You must have the CognosModule installed and configured per the suggested install process here:
+https://github.com/AR-k12code/CognosModule
 
 ## Suggested Install Process
 ````

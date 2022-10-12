@@ -1,10 +1,5 @@
 #Requires -Version 7.1
 
-Param(
-    [parameter(Mandatory=$false,HelpMessage="Do not download new Cognos Reports")][switch]$SkipDownload,
-	[parameter(Mandatory=$false,HelpMessage="Download from Cognos but do not upload the files to GG4L.")][switch]$SkipUpload
-)
-
 <#
 GG4L Automation Script
 Craig Millsap
@@ -20,6 +15,11 @@ Gentry Public Schools
    
 Please see https://github.com/AR-k12code/GG4L for more information.
 #>
+
+Param(
+    [parameter(Mandatory=$false,HelpMessage="Do not download new Cognos Reports")][switch]$SkipDownload,
+	[parameter(Mandatory=$false,HelpMessage="Download from Cognos but do not upload the files to GG4L.")][switch]$SkipUpload
+)
 
 #get host key by running .\bin\pscp.exe -v .\ fakeuser@upload.gg4l.com:\
 $gg4lhostkey = "02:4c:6d:15:57:59:d0:d6:4b:26:ee:90:b9:0f:74:94"
@@ -41,20 +41,29 @@ if (-Not($SkipDownload)) { #Skip downloading of new reports.
 
 $reports = @('users','orgs','academicSessions','courses','classes','enrollments','demographics') #,'manifest')
 
-#Establish Session Only. Report parameter is required but we can provide a fake one for authentication only.
-. $PSScriptRoot\..\CognosDownload.ps1 -report FAKE -EstablishSessionOnly
+#Establish Cognos Session.
+try {
+    if (-Not($CognosConfig)) {
+        $CognosConfig = 'DefaultConfig'
+    }
+    Connect-ToCognos -ConfigName $CognosConfig
+} catch {
+    Write-Host "Error: Failed to connect to Cognos." -ForegroundColor Red
+    exit 1
+}
 
 $results = $reports | ForEach-Object -Parallel {
     #report title
     $PSitem
 
     #pull in session to script block
-    $incomingsession = $using:session
+    $CognosSession = $using:CognosSession
+    $CognosDSN = $using:CognosDSN
+    $CognosProfile = $using:CognosProfile
+    $CognosUser = $using:CognosUsername
     
     #Run Cognos Download using incoming options.
-    & $using:PSScriptRoot\..\CognosDownload.ps1 -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -SessionEstablished -savepath "$using:PSScriptRoot\files" -FileName "$($PSItem).csv" -ShowReportDetails -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknoledge the prompts even if we don't answer them directly.
-
-    if ($LASTEXITCODE -ne 0) { throw }
+    Save-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -savepath "$using:PSScriptRoot\files" -FileName "$($PSItem).csv" -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknowledge the prompts even if we don't answer them directly.
     
 } -AsJob -ThrottleLimit 5 | Wait-Job #Please don't overload the Cognos Server.
 
