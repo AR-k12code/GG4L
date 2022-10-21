@@ -34,3 +34,4 @@ Go to the connect.gg4l.com and select the "Import OneRoster v1.1 SFTP" then clic
 - [ ] Currently only including Guardians 1 and 2. Would like to add 3rd.
 - [ ] It would be nice if the One Roster files matched the Clever files for sections ids.
 - [ ] Userids are reporting an error even though they are accepted.
+- [ ] TESTING
