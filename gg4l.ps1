@@ -1,4 +1,5 @@
 #Requires -Version 7.1
+#Requires -Modules CognosModule
 
 <#
 GG4L Automation Script
