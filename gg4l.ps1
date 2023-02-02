@@ -40,46 +40,31 @@ if (-Not(Test-Path "$PSScriptRoot\files")) { New-Item -Path $PSScriptRoot\files 
 
 if (-Not($SkipDownload)) { #Skip downloading of new reports.
 
-$reports = @('users','orgs','academicSessions','courses','classes','enrollments','demographics') #,'manifest')
+    $reports = @('users','orgs','academicSessions','courses','classes','enrollments','demographics') #,'manifest')
 
-#Establish Cognos Session.
-try {
-    if (-Not($CognosConfig)) {
-        $CognosConfig = 'DefaultConfig'
+    #Establish Cognos Session.
+    try {
+        if (-Not($CognosConfig)) {
+            $CognosConfig = 'DefaultConfig'
+        }
+        Connect-ToCognos -ConfigName $CognosConfig
+    } catch {
+        Write-Host "Error: Failed to connect to Cognos." -ForegroundColor Red
+        exit 1
     }
-    Connect-ToCognos -ConfigName $CognosConfig
-} catch {
-    Write-Host "Error: Failed to connect to Cognos." -ForegroundColor Red
-    exit 1
-}
 
-$results = $reports | ForEach-Object -Parallel {
-    #report title
-    $PSitem
-
-    #pull in session to script block
-    $CognosSession = $using:CognosSession
-    $CognosDSN = $using:CognosDSN
-    $CognosProfile = $using:CognosProfile
-    $CognosUser = $using:CognosUsername
-    
-    #Run Cognos Download using incoming options.
-    Save-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -savepath "$using:PSScriptRoot\files" -FileName "$($PSItem).csv" -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknowledge the prompts even if we don't answer them directly.
-    
-} -AsJob -ThrottleLimit 5 | Wait-Job #Please don't overload the Cognos Server.
-
-$results.ChildJobs | Where-Object { $PSItem.State -eq "Completed" } | Receive-Job
-
-#Output any failed jobs information.
-$failedJobs = $results.ChildJobs | Where-Object { $PSItem.State -ne "Completed" }
-$failedJobs | ForEach-Object {
-    $PSItem | Receive-Job
-}
-
-if (($failedJobs | Measure-Object).count -ge 1) {
-    Write-Host "Failed running", (($failedJobs | Measure-Object).count), "jobs." -ForegroundColor RED
-    exit(2)
-}
+    try {
+        $reports | ForEach-Object {
+            #start all of the reports on the cognos server so they can be processing.
+            Start-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknowledge the prompts even if we don't answer them directly.
+        } | ForEach-Object {
+            #retrieve them one at a time.
+            Save-CognosReport -conversationID $PSitem.conversationID -savepath "$PSScriptRoot\files" -FileName "$($PSItem.Report).csv"
+        }
+    } catch {
+        $PSItem
+        exit 2
+    }
 
 } #close skip download.
 
