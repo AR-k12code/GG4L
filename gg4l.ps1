@@ -59,7 +59,12 @@ if (-Not($SkipDownload)) { #Skip downloading of new reports.
             Start-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\ParentNotices-Transact-GG4L" -TeamContent -reportparams "p_stu_pass=&p_staff_pass=&p_parent_pass=" #We have to awknowledge the prompts even if we don't answer them directly.
         } | ForEach-Object {
             #retrieve them one at a time.
-            Save-CognosReport -conversationID $PSitem.conversationID -savepath "$PSScriptRoot\files" -FileName "$($PSItem.Report).csv"
+            if ($IsLinux) {
+                Save-CognosReport -conversationID $PSitem.conversationID -savepath "$PSScriptRoot/files" -FileName "$($PSItem.Report).csv" #Fixes path issues on Linux
+            } else {
+                Save-CognosReport -conversationID $PSitem.conversationID -savepath "$PSScriptRoot\files" -FileName "$($PSItem.Report).csv"
+            }
+
         }
     } catch {
         $PSItem
@@ -71,7 +76,15 @@ if (-Not($SkipDownload)) { #Skip downloading of new reports.
 if (-Not($SkipUpload)) {
     try {
         Write-Host "Info: Uploading files to GG4L..." -ForegroundColor YELLOW
+        #Linux doesn't interpret the recursion correctly, so we use a loop instead. Must install putty-tools
+	if ($IsLinux) { 
+            Get-ChildItem -Path $PSScriptRoot\files -Filter *.csv |
+            ForEach-Object {
+                $exec = Start-Process -FilePath "/usr/bin/pscp" -ArgumentList "-pw ""$gg4lpassword"" -hostkey $gg4lhostkey $_ $($gg4lusername)@upload.gg4l.com:/" -PassThru -Wait -NoNewWindow
+            }
+        } else {
         $exec = Start-Process -FilePath "$PSScriptRoot\bin\pscp.exe" -ArgumentList "-pw ""$gg4lpassword"" -hostkey $gg4lhostkey -r $PSScriptRoot\files\*.csv $($gg4lusername)@upload.gg4l.com:/" -PassThru -Wait -NoNewWindow
+        }
         if ($exec.ExitCode -ge 1) { Throw }
     } catch {
         write-Host "ERROR: Failed to properly upload files to GG4L." -ForegroundColor RED
