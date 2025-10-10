@@ -23,7 +23,7 @@ Param(
 )
 
 #get host key by running .\bin\pscp.exe -v .\ fakeuser@upload.gg4l.com:\
-$gg4lhostkey = "02:4c:6d:15:57:59:d0:d6:4b:26:ee:90:b9:0f:74:94"
+$gg4lhostkey = "ecdsa-sha2-nistp521 521 b7:a7:63:26:04:ce:ac:48:a2:3f:a0:a1:c3:40:08:df"
 
 Start-Transcript "$PSScriptRoot\gg4l-log.log" -Force
 
@@ -71,7 +71,7 @@ if (-Not($SkipDownload)) { #Skip downloading of new reports.
 if (-Not($SkipUpload)) {
     try {
         Write-Host "Info: Uploading files to GG4L..." -ForegroundColor YELLOW
-        $exec = Start-Process -FilePath "$PSScriptRoot\bin\pscp.exe" -ArgumentList "-pw ""$gg4lpassword"" -hostkey $gg4lhostkey -r $PSScriptRoot\files\*.csv $($gg4lusername)@upload.gg4l.com:/" -PassThru -Wait -NoNewWindow
+        $exec = Start-Process -FilePath "$PSScriptRoot\bin\pscp.exe" -ArgumentList "-pw ""$gg4lpassword"" -hostkey $gg4lhostkey -r $PSScriptRoot\files\*.csv $($gg4lusername)@sftp.gg4l.com:/" -PassThru -Wait -NoNewWindow
         if ($exec.ExitCode -ge 1) { Throw }
     } catch {
         write-Host "ERROR: Failed to properly upload files to GG4L." -ForegroundColor RED
