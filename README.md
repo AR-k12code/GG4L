@@ -10,6 +10,8 @@ Create a dedicated VM running Windows Server 2019 or Windows 10 Pro 1809+ for yo
 Git ````https://git-scm.com/download/win````
 
 Powershell 7 ````https://github.com/PowerShell/powershell/releases````
+
+For Ubuntu ````sudo apt install putty-tools````
 ## Requirements
 You must have the CognosModule installed and configured per the suggested install process here:
 https://github.com/AR-k12code/CognosModule
